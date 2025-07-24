@@ -14,7 +14,7 @@ const Weather = () => {
   const [selectedChart, setSelectedChart] = useState('Temperature');
   const [selectedDay, setSelectedDay] = useState(0); // 0: Today, 1: Day 2, 2: Day 3
   const apiKey = 'f5ac4be4a19c47d8a3e42522222112';
-  const days = 3; // Lấy dữ liệu cho 3 ngày
+  const days = 3; // Fetch data for 3 days
 
   // Fetch weather data
   useEffect(() => {
@@ -28,16 +28,16 @@ const Weather = () => {
           if (data.error) {
             console.error('API error:', data.error.message);
             setWeatherData(null);
-            setErrorMessage('Không tìm thấy thành phố. Vui lòng nhập tên thành phố hợp lệ.');
+            setErrorMessage('City not found. Please enter a valid city name.');
           } else {
             setWeatherData(data);
             setErrorMessage('');
           }
         }
       } catch (error) {
-        console.error('Lỗi khi lấy dữ liệu thời tiết:', error);
+        console.error('Error fetching weather data:', error);
         setWeatherData(null);
-        setErrorMessage('Đã xảy ra lỗi khi lấy dữ liệu thời tiết.');
+        setErrorMessage('An error occurred while fetching weather data.');
       }
     };
 
@@ -57,9 +57,9 @@ const Weather = () => {
           `https://api.weatherapi.com/v1/search.json?key=${apiKey}&q=${inputValue}`
         );
         const data = await response.json();
-        setSuggestions(data.slice(0, 5)); // Giới hạn 5 gợi ý
+        setSuggestions(data.slice(0, 5)); // Limit to 5 suggestions
       } catch (error) {
-        console.error('Lỗi khi lấy gợi ý:', error);
+        console.error('Error fetching suggestions:', error);
         setSuggestions([]);
       }
     };
@@ -78,9 +78,9 @@ const Weather = () => {
       if (inputValue.trim() !== '') {
         setCity(inputValue.trim());
         setSuggestions([]);
-        setSelectedDay(0); // Reset về ngày hiện tại khi thay đổi thành phố
+        setSelectedDay(0); // Reset to today when changing city
       } else {
-        setErrorMessage('Vui lòng nhập tên thành phố.');
+        setErrorMessage('Please enter a city name.');
       }
     }
   };
@@ -91,10 +91,10 @@ const Weather = () => {
     setCity(selectedCity);
     setSuggestions([]);
     setErrorMessage('');
-    setSelectedDay(0); // Reset về ngày hiện tại khi chọn gợi ý
+    setSelectedDay(0); // Reset to today when selecting suggestion
   };
 
-  // Lấy dữ liệu cho các mốc giờ cố định: 6 AM, 12 PM, 6 PM, 12 AM
+  // Get data for fixed time points: 6 AM, 12 PM, 6 PM, 12 AM
   const getHourlyData = (type) => {
     if (!weatherData || !weatherData.forecast || !weatherData.forecast.forecastday[selectedDay]) return [];
     
@@ -162,7 +162,7 @@ const Weather = () => {
           },
           title: {
             display: true,
-            text: 'Time'
+            text: 'Time of Day'
           }
         },
         y: {
@@ -226,11 +226,11 @@ const Weather = () => {
 
   const getForecastLabel = () => {
     if (selectedChart === 'Temperature') {
-      return 'Nhiệt độ';
+      return 'Temperature';
     } else if (selectedChart === 'UV Index') {
-      return 'Chỉ số UV';
+      return 'UV Index';
     } else {
-      return 'Độ ẩm';
+      return 'Humidity';
     }
   };
 
@@ -244,7 +244,7 @@ const Weather = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', { 
+    return date.toLocaleDateString('en-US', { 
       month: 'short', 
       day: 'numeric' 
     });
@@ -252,16 +252,16 @@ const Weather = () => {
 
   const formatDateTime = () => {
     if (!weatherData || !weatherData.location || !weatherData.location.localtime) {
-      return 'Đang tải...';
+      return 'Loading...';
     }
     const localTime = new Date(weatherData.location.localtime);
-    const time = localTime.toLocaleTimeString('vi-VN', { 
+    const time = localTime.toLocaleTimeString('en-US', { 
       hour: 'numeric', 
       minute: '2-digit', 
       hour12: true 
     });
-    const weekday = localTime.toLocaleDateString('vi-VN', { weekday: 'short' });
-    const month = localTime.toLocaleDateString('vi-VN', { month: 'short' });
+    const weekday = localTime.toLocaleDateString('en-US', { weekday: 'short' });
+    const month = localTime.toLocaleDateString('en-US', { month: 'short' });
     const day = localTime.getDate();
     const year = localTime.getFullYear();
     return `${time}, ${weekday}, ${month} ${day}, ${year}`;
@@ -271,7 +271,7 @@ const Weather = () => {
     <div className="weather-container">
       <div className="city-input-section">
         <label className="city-label">
-          Thành phố của bạn
+          Your city
         </label>
         <div className="input-container">
           <input
@@ -280,7 +280,7 @@ const Weather = () => {
             onChange={handleCityChange}
             onKeyDown={handleKeyDown}
             className="city-input"
-            placeholder="Nhập tên thành phố"
+            placeholder="Enter city name"
           />
           {suggestions.length > 0 && (
             <div className="suggestions-overlay">
@@ -308,7 +308,7 @@ const Weather = () => {
       <div className="main-content">
         <div className="weather-left">
           <div className="current-time">
-            {currentWeather ? formatDateTime(currentWeather.last_updated) : 'Đang tải...'}
+            {currentWeather ? formatDateTime(currentWeather.last_updated) : 'Loading...'}
           </div>
 
           {currentWeather && (
@@ -318,7 +318,7 @@ const Weather = () => {
                   {getWeatherIcon(currentWeather.condition.text)}
                 </div>
                 <div className="current-temp">
-                  {Math.round(weatherData.forecast.forecastday[0].day.avgtemp_c)}°C
+                  {Math.round(currentWeather.temp_c)}°C
                 </div>
               </div>
               
@@ -331,7 +331,7 @@ const Weather = () => {
           <div className="weather-details">
             <div className="detail-item">
               <div className="detail-label">
-                Độ ẩm
+                Humidity
               </div>
               <div className="detail-value">
                 {currentWeather && `${currentWeather.humidity}%`}
@@ -339,7 +339,7 @@ const Weather = () => {
             </div>
             <div className="detail-item">
               <div className="detail-label">
-                Tốc độ gió
+                Wind Speed
               </div>
               <div className="detail-value">
                 {currentWeather && `${Math.round(currentWeather.wind_kph)} km/h`}
@@ -351,7 +351,7 @@ const Weather = () => {
         <div className="weather-right">
           <div className="chart-section">
             <div className="chart-title">
-              {selectedChart === 'Temperature' ? 'Nhiệt độ' : selectedChart === 'UV Index' ? 'Chỉ số UV' : 'Độ ẩm'}
+              {selectedChart}
             </div>
             
             <div className="chart-selector-buttons">
@@ -359,19 +359,19 @@ const Weather = () => {
                 className={`chart-button ${selectedChart === 'Temperature' ? 'active' : ''}`}
                 onClick={() => setSelectedChart('Temperature')}
               >
-                Nhiệt độ
+                Temperature
               </button>
               <button 
                 className={`chart-button ${selectedChart === 'UV Index' ? 'active' : ''}`}
                 onClick={() => setSelectedChart('UV Index')}
               >
-                Chỉ số UV
+                UV Index
               </button>
               <button 
                 className={`chart-button ${selectedChart === 'Humidity' ? 'active' : ''}`}
                 onClick={() => setSelectedChart('Humidity')}
               >
-                Độ ẩm
+                Humidity
               </button>
             </div>
             
@@ -394,7 +394,7 @@ const Weather = () => {
                 onClick={() => setSelectedDay(index)}
               >
                 <div className={`forecast-date ${index === selectedDay ? 'today' : 'other'}`}>
-                  {index === 0 ? 'Hôm nay' : formatDate(day.date)}
+                  {index === 0 ? 'Today' : formatDate(day.date)}
                 </div>
                 
                 <div className="forecast-icon">
